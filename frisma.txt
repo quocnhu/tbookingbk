@@ -1,0 +1,128 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+//////////////////////////////////////////////////////
+// USER
+//////////////////////////////////////////////////////
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+
+  isActive        Boolean @default(true)
+  isEmailVerified Boolean @default(false)
+
+  roles     UserRole[]
+
+  emailVerifications EmailVerification[]
+  refreshTokens      RefreshToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+//////////////////////////////////////////////////////
+// ROLE
+//////////////////////////////////////////////////////
+
+model Role {
+  id          String @id @default(cuid())
+  name        String @unique
+  description String?
+
+  users       UserRole[]
+  permissions RolePermission[]
+
+  createdAt DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// PERMISSION
+//////////////////////////////////////////////////////
+
+model Permission {
+  id String @id @default(cuid())
+
+  resource String
+  action   String
+
+  description String?
+
+  roles RolePermission[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([resource, action])
+}
+
+//////////////////////////////////////////////////////
+// USER ROLE (JOIN TABLE)
+//////////////////////////////////////////////////////
+
+model UserRole {
+  userId String
+  roleId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+//////////////////////////////////////////////////////
+// ROLE PERMISSION
+//////////////////////////////////////////////////////
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+//////////////////////////////////////////////////////
+// EMAIL VERIFICATION TOKEN, NO NEED TO RELOGIN 
+//////////////////////////////////////////////////////
+
+model EmailVerification {
+  id        String   @id @default(cuid())
+
+  userId    String
+  token     String   @unique
+
+  expiresAt DateTime
+  used      Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}
+
+//////////////////////////////////////////////////////
+// REFRESH TOKEN (JWT AUTH)
+//////////////////////////////////////////////////////
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+
+  userId    String
+  token     String   @unique
+
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+}

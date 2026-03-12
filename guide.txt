@@ -1,0 +1,153 @@
+give me code for each of these , i just copy and paste then to deploy my project quickier (remember that i want to use global for authguard and permission, and cookie jwt, no local jwt, password need to be encrypted, nodemail to handle template )
+✅ JWT stored in HTTP-only cookies (no localStorage)
+✅ Global AuthGuard + PermissionsGuard
+✅ Password hashing (bcrypt)
+✅ Prisma integration
+✅ Nodemailer with template support
+✅ Decorators: @Public(), @Permissions(), @CurrentUser()
+✅ Clean modular architecture
+
+src
+├── main.ts
+├── app.module.ts
+│
+├── prisma
+│   ├── prisma.module.ts
+│   └── prisma.service.ts
+│
+├── auth
+│   ├── auth.module.ts
+│   ├── auth.controller.ts
+│   ├── auth.service.ts
+│
+│   ├── strategies
+│   │   └── jwt.strategy.ts
+│
+│   ├── guards
+│   │   ├── jwt-auth.guard.ts
+│   │   └── permissions.guard.ts
+│
+│   ├── decorators
+│   │   ├── public.decorator.ts
+│   │   └── permissions.decorator.ts
+│
+│   └── dto
+│       ├── login.dto.ts
+│       └── register.dto.ts
+│
+├── users
+│   ├── users.module.ts
+│   ├── users.controller.ts
+│   └── users.service.ts
+│
+├── dashboard
+│   ├── dashboard.module.ts
+│   ├── dashboard.controller.ts
+│   └── dashboard.service.ts
+│
+├── mail
+│   ├── mail.module.ts
+│   └── mail.service.ts
+│
+├── common
+│   ├── decorators
+│   │   └── current-user.decorator.ts
+│   │
+│   └── utils
+│       ├── hash.util.ts
+│       └── token.util.ts
+│
+└── database
+    └── seed.ts
+
+    =================================
+src
+├── main.ts
+├── app.module.ts
+│
+├── prisma
+│   ├── prisma.module.ts
+│   └── prisma.service.ts
+│
+├── common
+│   ├── decorators
+│   │   ├── public.decorator.ts
+│   │   └── permissions.decorator.ts
+│   │
+│   ├── guards
+│   │   ├── jwt-auth.guard.ts
+│   │   └── permissions.guard.ts
+│   │
+│   ├── interfaces
+│   │   └── jwt-payload.interface.ts
+│   │
+│   └── utils
+│       └── hash.util.ts
+│
+├── auth
+│   ├── auth.module.ts
+│   ├── auth.controller.ts
+│   ├── auth.service.ts
+│   │
+│   ├── strategies
+│   │   └── jwt.strategy.ts
+│   │
+│   └── dto
+│       ├── login.dto.ts
+│       └── register.dto.ts
+│
+├── users
+│   ├── users.module.ts
+│   ├── users.controller.ts
+│   ├── users.service.ts
+│   │
+│   └── dto
+│       ├── create-user.dto.ts
+│       └── update-user.dto.ts
+│
+└── dashboard
+    ├── dashboard.module.ts
+    ├── dashboard.controller.ts
+    ├── dashboard.service.ts
+
+    //////////////////////////////////
+
+    Login
+  ↓
+JWT issued
+
+Request
+  ↓
+JwtAuthGuard
+  ↓
+Passport Strategy
+  ↓
+Decode JWT
+  ↓
+Load user + permissions from database
+  ↓
+Attach to request.user
+
+PermissionsGuard
+  ↓
+Check request.user.permissions
+/////
+Request
+   ↓
+cookie-parser
+   ↓
+JwtAuthGuard
+   ↓
+Passport JWT Strategy
+   ↓
+JwtStrategy.validate()
+   ↓
+Prisma query
+   ↓
+return user
+   ↓
+request.user = user
+   ↓
+PermissionsGuard
+   ↓
+Controller

@@ -1,0 +1,140 @@
+npx prisma migrate dev --name init
+npx prisma migrate reset (if you want to remove all of tables, need to remove migration folder first)
+=====
+root
+#!/bin/bash
+
+cd src
+
+echo "Creating folders..."
+
+mkdir -p auth/{strategies,guards,decorators,dto}
+mkdir -p users
+mkdir -p dashboard
+mkdir -p mail
+mkdir -p common/{decorators,utils}
+mkdir -p database
+
+echo "Creating files..."
+
+# auth
+touch auth/auth.module.ts
+touch auth/auth.controller.ts
+touch auth/auth.service.ts
+
+touch auth/strategies/jwt.strategy.ts
+
+touch auth/guards/jwt-auth.guard.ts
+touch auth/guards/permissions.guard.ts
+
+touch auth/decorators/public.decorator.ts
+touch auth/decorators/permissions.decorator.ts
+
+touch auth/dto/login.dto.ts
+touch auth/dto/register.dto.ts
+
+# users
+touch users/users.module.ts
+touch users/users.controller.ts
+touch users/users.service.ts
+
+# dashboard
+touch dashboard/dashboard.module.ts
+touch dashboard/dashboard.controller.ts
+touch dashboard/dashboard.service.ts
+
+# mail
+touch mail/mail.module.ts
+touch mail/mail.service.ts
+
+# common
+touch common/decorators/current-user.decorator.ts
+touch common/utils/hash.util.ts
+touch common/utils/token.util.ts
+
+# database
+touch database/seed.ts
+
+echo "Structure created successfully!"
+chmod +x create-structure.sh
+./create-structure.sh
+
+=========================================
+Client request
+  ↓
+JWT cookie
+  ↓
+JwtAuthGuard
+  ↓
+decode token
+  ↓
+req.user = { id }
+  ↓
+PermissionGuard
+  ↓
+generate permission from route
+  ↓
+load permissions from Redis
+  ↓
+compare
+  ↓
+allow / deny
+==============================================
+model User {
+  id        String   @id @default(uuid())
+  fullName  String
+  email     String   @unique
+  password  String
+
+  roles       UserRole[]
+  permissions UserPermission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Role {
+  id   String @id @default(uuid())
+  name String @unique
+
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id   String @id @default(uuid())
+  name String @unique
+
+  roles RolePermission[]
+  users UserPermission[]
+}
+
+model UserRole {
+  userId String
+  roleId String
+
+  user User @relation(fields: [userId], references: [id])
+  role Role @relation(fields: [roleId], references: [id])
+
+  @@id([userId, roleId])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([roleId, permissionId])
+}
+
+model UserPermission {
+  userId       String
+  permissionId String
+
+  user       User       @relation(fields: [userId], references: [id])
+  permission Permission @relation(fields: [permissionId], references: [id])
+
+  @@id([userId, permissionId])
+}
