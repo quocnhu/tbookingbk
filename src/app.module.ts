@@ -1,4 +1,6 @@
 import { Module } from '@nestjs/common'
+//global env
+import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core'
 
 import { PrismaModule } from '@/prisma/prisma.module'
@@ -11,6 +13,10 @@ import { PermissionsGuard } from '@/common/guards/permissions.guard'
 
 @Module({
   imports: [
+    //must be imported in import
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     PrismaModule,
     AuthModule,
     UsersModule,
